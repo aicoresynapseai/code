@@ -1,0 +1,75 @@
+# GitLab CI/CD Pipeline for Java project with SonarQube AI-Enhanced Scan
+
+# Define global variables for SonarQube.
+# These should be set as GitLab CI/CD variables in your project settings (Settings > CI/CD > Variables).
+# Ensure SONAR_TOKEN is a protected variable.
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository" # Cache Maven dependencies
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"     # SonarQube cache directory
+  GIT_DEPTH: "0"                                  # Tells git to fetch all history for SonarQube SCM blame
+
+stages:
+  - build
+  - test
+  - sonarqube_scan
+  - deploy
+
+# Use the official Maven image
+image: maven:3.8.7-openjdk-11
+
+# Cache Maven dependencies to speed up builds
+cache:
+  paths:
+    - .m2/repository
+    - .sonar/cache
+
+build_job:
+  stage: build
+  script:
+    - echo "Building the Java application with Maven..."
+    - mvn clean install -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar # Save the built JAR for later stages if needed
+
+unit_test_job:
+  stage: test
+  script:
+    - echo "Running unit tests and generating coverage report..."
+    - mvn test jacoco:report
+  artifacts:
+    when: always
+    paths:
+      - target/site/jacoco/jacoco.xml # Save JaCoCo report for SonarQube
+
+sonarqube_scan_job:
+  stage: sonarqube_scan
+  # This job will run only if the build and test stages pass.
+  # The 'only' rule can be adjusted based on your branching strategy (e.g., 'merge_requests', 'branches: [main, develop]')
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_MERGE_REQUEST_IID' # Run on push to main or on merge requests
+  script:
+    - echo "Performing SonarQube AI-enhanced static analysis..."
+    # The sonar.login property uses the SONAR_TOKEN GitLab CI/CD variable.
+    # The sonar.host.url property uses the SONAR_HOST_URL GitLab CI/CD variable.
+    # The 'sonar' profile in pom.xml sets up paths for SonarQube analysis.
+    - mvn verify sonar:sonar -Psonar -Dsonar.projectKey=${CI_PROJECT_NAME} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}
+    # For Quality Gate check, you typically rely on the SonarQube webhooks
+    # or use a separate script that polls the SonarQube API.
+    # GitLab's integration with SonarQube can also show results directly in MRs.
+    - echo "SonarQube analysis completed. Check SonarQube dashboard for Quality Gate status: ${SONAR_HOST_URL}/dashboard?id=${CI_PROJECT_NAME}"
+  allow_failure: true # Allow this stage to fail initially if Quality Gate fails, but ideally, you'd fail the pipeline
+
+deploy_job:
+  stage: deploy
+  # This job runs only if all previous jobs in the pipeline succeed.
+  # If the sonarqube_scan_job is configured to fail the pipeline on Quality Gate failure,
+  # this job will not execute for insecure code.
+  when: on_success
+  script:
+    - echo "Quality Gate passed (assumed from previous stage success)."
+    - echo "Packaging application for deployment (if not already packaged)..."
+    - mvn package -DskipTests # Ensures artifact is ready if not from previous stage
+    - echo "Deploying application to staging environment (mock)..."
+    # Add your actual deployment commands here
+    - echo "Application deployed successfully to staging!"

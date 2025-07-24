@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version> <!-- Using a stable Spring Boot LTS version -->
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.example</groupId>
+    <artifactId>secure-java-pipeline</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>SecureJavaPipelineAI</name>
+    <description>Demo project for Enhancing Security in Java DevOps with AI Scanning</description>
+
+    <properties>
+        <java.version>11</java.version>
+        <sonar.organization>default-org</sonar.organization> <!-- Replace with your SonarCloud organization if using -->
+        <sonar.host.url>http://localhost:9000</sonar.host.url> <!-- Default SonarQube local host -->
+        <!-- sonar.token is typically passed via CI/CD environment variables, not hardcoded here -->
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Adding Lombok for boilerplate reduction, not directly security related but common -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Example for potential unsafe deserialization (Jackson) - often flagged by SAST -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <!-- A very old version to potentially trigger more known issues, though modern SAST flags usage patterns -->
+            <version>2.9.10.8</version>
+        </dependency>
+        <!-- Another common dependency for SQL operations -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- SonarQube Maven Plugin configuration -->
+            <plugin>
+                <groupId>org.sonarsource.scanner</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.9.1.2183</version> <!-- Use a recent stable version of the SonarQube scanner plugin -->
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>sonar</id>
+            <properties>
+                <!-- These properties are often overridden by CI/CD environment variables -->
+                <sonar.projectKey>secure-java-pipeline</sonar.projectKey>
+                <sonar.language>java</sonar.language>
+                <sonar.sources>src/main</sonar.sources>
+                <sonar.tests>src/test</sonar.tests>
+                <sonar.java.binaries>target/classes</sonar.java.binaries>
+                <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

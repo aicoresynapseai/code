@@ -1,0 +1,97 @@
+// Jenkins Declarative Pipeline for Java project with SonarQube AI-Enhanced Scan
+pipeline {
+    agent any // Or a more specific agent like agent { label 'java-maven-agent' }
+
+    environment {
+        // SonarQube server URL. This should point to your SonarQube instance.
+        // For local demo, it's http://localhost:9000. In production, use your actual server.
+        SONAR_HOST_URL = "http://localhost:9000" 
+        // SonarQube token. Store this as a Jenkins secret credential.
+        // The ID 'SonarQube_Token_ID' must match the ID of your 'Secret text' credential in Jenkins.
+        SONAR_TOKEN = credentials('SonarQube_Token_ID') 
+        // Project Key for SonarQube. This should be unique for your project.
+        SONAR_PROJECT_KEY = "secure-java-pipeline"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the SCM (Source Code Management)
+                // Assumes your Jenkins job is configured to pull from a Git repository
+                git branch: 'main', url: 'https://github.com/your-org/SecureJavaPipelineAI.git' // Replace with your repo URL
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building the Java application with Maven...'
+                // Use Maven to clean and package the application
+                sh 'mvn clean install -DskipTests' 
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                echo 'Running unit tests...'
+                // Run unit tests and generate JaCoCo code coverage report
+                sh 'mvn test jacoco:report'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Performing SonarQube AI-enhanced static analysis...'
+                // Trigger SonarQube analysis using Maven.
+                // The -Dsonar.login property uses the SONAR_TOKEN environment variable.
+                // The -Dsonar.host.url property uses the SONAR_HOST_URL environment variable.
+                // The -Dsonar.projectKey property uses the SONAR_PROJECT_KEY environment variable.
+                // The 'sonar' profile defined in pom.xml includes additional configuration for analysis paths.
+                withSonarQubeEnv(credentialsId: 'SonarQube_Token_ID') { // Use this if you have the SonarQube Scanner for Jenkins plugin
+                    sh "mvn sonar:sonar -Psonar -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.host.url=${SONAR_HOST_URL}"
+                }
+                // Alternatively, if not using withSonarQubeEnv and configuring via params:
+                // sh "mvn sonar:sonar -Psonar -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+            }
+        }
+
+        stage('Quality Gate Check') {
+            steps {
+                echo 'Checking SonarQube Quality Gate status...'
+                // This step waits for the SonarQube analysis to complete and checks the Quality Gate status.
+                // If the Quality Gate fails (e.g., new critical vulnerabilities are found, or AI-identified high-risk patterns are present),
+                // the pipeline will fail at this stage, preventing insecure code from progressing.
+                timeout(time: 5, unit: 'MINUTES') { // Set a timeout for the Quality Gate check
+                    waitForQualityGate abortPipeline: true // Abort the pipeline if Quality Gate fails
+                }
+            }
+        }
+
+        stage('Package and Deploy (Mock)') {
+            when {
+                // Only run this stage if the previous Quality Gate stage passed.
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo 'Quality Gate passed. Packaging application for deployment...'
+                sh 'mvn package' // Re-package if necessary, or use previous artifact
+                echo 'Deploying application to staging environment (mock)...'
+                // Add your actual deployment steps here (e.g., Docker build, Kubernetes deployment, artifact upload)
+                sh 'echo "Application deployed successfully to staging!"'
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up workspace after pipeline execution
+            cleanWs()
+            script {
+                if (currentBuild.currentResult == 'FAILURE') {
+                    echo 'Pipeline failed. Check SonarQube dashboard for details on security issues.'
+                } else {
+                    echo 'Pipeline completed successfully. Code is secure as per Quality Gate.'
+                }
+            }
+        }
+    }
+}

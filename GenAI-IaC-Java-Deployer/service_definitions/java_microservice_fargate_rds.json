@@ -1,0 +1,22 @@
+{
+  "service_name": "UserService",
+  "runtime": "java",
+  "compute_type": "aws_fargate",
+  "port": 8080,
+  "database": {
+    "type": "postgresql",
+    "version": "13",
+    "instance_size": "db.t3.micro",
+    "storage_gb": 20,
+    "username": "user",
+    "password_secret_name": "/my-app/UserService/db-password"
+  },
+  "networking": {
+    "load_balancer": "application_load_balancer",
+    "public_facing": true
+  },
+  "monitoring": {
+    "logging_enabled": true
+  },
+  "environment": "development"
+}

@@ -1,0 +1,17 @@
+service_name: NotificationService
+runtime: java
+compute_type: aws_lambda
+memory_mb: 512
+timeout_seconds: 30
+database:
+  type: dynamodb
+  table_name: notification-events
+  partition_key: id
+  sort_key: timestamp
+  read_capacity: 5
+  write_capacity: 5
+messaging:
+  type: sqs_queue
+  queue_name: notification_queue
+  dead_letter_queue: true
+environment: staging

@@ -1,0 +1,26 @@
+application_name: InventoryService
+environment: staging
+cloud_provider: aws
+region: us-west-2
+components:
+  spring_boot_app:
+    instance_type: t3.large
+    min_instances: 2
+    max_instances: 5
+    port: 8081
+    docker_image: yourrepo/inventoryservice:2.1.0
+  postgresql_database:
+    db_name: inventorydb
+    username: inventoryuser
+    allocated_storage_gb: 50
+    instance_class: db.m5.large
+  api_gateway:
+    enabled: true
+    path: /inventory
+  load_balancer:
+    type: application
+    port: 80
+    enabled: true
+  message_queue:
+    enabled: true
+    type: kafka # This component is acknowledged by the GenAI simulation but not implemented in IaC output for brevity.

@@ -1,3 +1,0 @@
-            app.client.chat_postMessage(channel=channel_id, text=config.last_deployment_status)
-        else:
-            config.last_deployment_status = f"Deployment of {app_name} v{version} to {environment} by <@{user_id}> FAILED! ❌\nError:\n

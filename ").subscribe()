@@ -1,0 +1,61 @@
+                                    );
+
+                                    return Mono.fromFuture(deploymentFuture)
+                                            .flatMap(success -> {
+                                                if (success) {
+                                                    String successMessage = String.format("Deployment to `%s` (version `%s`) completed successfully! :rocket:", finalEnvironment, finalVersion);
+                                                    return channel.createMessage(openAIService.getConversationalResponse(successMessage));
+                                                } else {
+                                                    String failureMessage = String.format("Deployment to `%s` (version `%s`) failed. Please check the logs above for details. :x:", finalEnvironment, finalVersion);
+                                                    return channel.createMessage(openAIService.getConversationalResponse(failureMessage));
+                                                }
+                                            });
+                                }));
+
+                            case "status":
+                                if (environment == null) {
+                                    return channel.createMessage(openAIService.getConversationalResponse(
+                                            "To check status, please specify an environment (e.g., `dev`, `staging`, `production`). " +
+                                                    "Example: `@ChatOpsDevBot check status of production`"
+                                    ));
+                                }
+                                String status = deploymentService.getDeploymentStatus(environment);
+                                return channel.createMessage(openAIService.getConversationalResponse("Checking status for `" + environment + "`...\n" + status));
+
+                            case "rollback":
+                                if (environment == null || version == null) {
+                                    return channel.createMessage(openAIService.getConversationalResponse(
+                                            "To rollback, please specify an environment and a version to rollback to. " +
+                                                    "Example: `@ChatOpsDevBot rollback app on staging to v1.0.0`"
+                                    ));
+                                }
+                                String rollbackResult = deploymentService.rollbackDeployment(environment, version);
+                                return channel.createMessage(openAIService.getConversationalResponse(rollbackResult));
+
+                            case "help":
+                                return channel.createMessage(openAIService.getConversationalResponse(
+                                        "Hello! I am your ChatOps DevOps bot. Here are some things I can help with:\n" +
+                                                "- `deploy <environment> <version>`: Deploy an application (e.g., `deploy production latest`, `deploy dev v1.2.3`)\n" +
+                                                "- `status <environment>`: Get the deployment status of an environment (e.g., `status staging`)\n" +
+                                                "- `rollback <environment> <version>`: Rollback an environment to a specific version (e.g., `rollback production v1.0.0`)\n" +
+                                                "Just mention me and tell me what you need!"
+                                ));
+
+                            default:
+                                // Fallback for commands understood by LLM but not explicitly handled here
+                                return channel.createMessage(openAIService.getConversationalResponse(
+                                        "I parsed your command but it seems to be an action I'm not directly set up to execute yet. " +
+                                                "Command: `" + command + "`, Environment: `" + environment + "`, Version: `" + version + "`." +
+                                                "Please try one of the supported commands like `deploy`, `status`, or `rollback`."
+                                ));
+                        }
+                    })
+                    .switchIfEmpty(Mono.defer(() -> {
+                        // If LLM couldn't parse into a structured command or suggest commands
+                        return channel.createMessage(openAIService.getConversationalResponse(
+                                "I'm sorry, I couldn't understand your request clearly. Could you please rephrase it or ask for `help`?"
+                        ));
+                    }));
+        }).then(); // Ensure the Mono completes
+    }
+}

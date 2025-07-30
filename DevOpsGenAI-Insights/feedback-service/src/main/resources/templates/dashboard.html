@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOpsGenAI Insights Dashboard</title>
+    <style>
+        /* Basic CSS for a clean and readable dashboard */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .build-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-in-out;
+        }
+        .build-card:hover {
+            transform: translateY(-3px);
+        }
+        .build-card.SUCCESS {
+            border-left: 5px solid #28a745; /* Green for success */
+        }
+        .build-card.FAILURE {
+            border-left: 5px solid #dc3545; /* Red for failure */
+        }
+        .build-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .build-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #34495e;
+        }
+        .build-status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+            text-transform: uppercase;
+        }
+        .build-status.SUCCESS { background-color: #28a745; }
+        .build-status.FAILURE { background-color: #dc3545; }
+
+        .ai-analysis {
+            background-color: #e8f0fe;
+            border-left: 4px solid #007bff;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+        .ai-analysis h3 {
+            margin-top: 0;
+            color: #0056b3;
+            font-size: 1.1em;
+        }
+        .ai-analysis ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        .ai-analysis li {
+            margin-bottom: 5px;
+        }
+        .meta-data {
+            font-size: 0.9em;
+            color: #777;
+            margin-top: 5px;
+        }
+        .error-messages {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .error-messages ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .error-messages li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DevOpsGenAI Insights Dashboard</h1>
+
+        <div th:if="${builds.isEmpty()}" style="text-align: center; color: #555;">
+            No build reports received yet. Run the `run_demo.sh` script to see data populate here.
+        </div>
+
+        <!-- Iterate over each build report in the 'builds' list -->
+        <div th:each="build : ${builds}" class="build-card" th:classappend="${build.buildReport.status}">
+            <div class="build-header">
+                <h2 th:text="'Project: ' + ${build.buildReport.projectId} + ' (Build ID: ' + ${build.buildReport.buildId} + ')'"></h2>
+                <span class="build-status" th:text="${build.buildReport.status}" th:classappend="${build.buildReport.status}"></span>
+            </div>
+            <div class="meta-data">
+                <p>Received: <span th:text="${#temporals.format(build.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+                <p>Build Time: <span th:text="${#numbers.formatDecimal(build.buildReport.buildTimeSeconds, 0, 2)}"></span> seconds</p>
+                <p>Tests: Total <span th:text="${build.buildReport.totalTests}"></span> | Passed <span th:text="${build.buildReport.passedTests}"></span> | Failed <span th:text="${build.buildReport.failedTests}"></span></p>
+            </div>
+
+            <!-- Display error messages if build failed and errors exist -->
+            <div th:if="${build.buildReport.status == 'FAILURE' and !build.buildReport.errorMessages.isEmpty()}" class="error-messages">
+                <h4>Raw Error Messages:</h4>
+                <ul>
+                    <li th:each="error : ${build.buildReport.errorMessages}" th:text="${error}"></li>
+                </ul>
+            </div>
+
+            <!-- Display AI Analysis -->
+            <div class="ai-analysis">
+                <h3>AI Analysis:</h3>
+                <p><strong>Summary:</strong> <span th:text="${build.aiAnalysis.analysisSummary}"></span></p>
+                <p><strong>Confidence:</strong> <span th:text="${build.aiAnalysis.confidenceScore}"></span> (Model: <span th:text="${build.aiAnalysis.aiModelUsed}"></span>)</p>
+                <div th:if="${!build.aiAnalysis.suggestedFixes.isEmpty()}">
+                    <p><strong>Suggested Fixes:</strong></p>
+                    <ul>
+                        <li th:each="fix : ${build.aiAnalysis.suggestedFixes}" th:text="${fix}"></li>
+                    </ul>
+                </div>
+                <div th:if="${build.aiAnalysis.suggestedFixes.isEmpty()}">
+                    <p>No specific fixes suggested by AI for this report.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

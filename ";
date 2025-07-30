@@ -1,0 +1,104 @@
+    }
+
+    /**
+     * Sends the code diff to the LLM API and parses the response into a list of ReviewComment objects.
+     * @param codeDiff The git diff string of the pull request changes.
+     * @return A list of ReviewComment objects. Returns an empty list if no comments are generated or an error occurs.
+     */
+    public List<ReviewComment> getReviewComments(String codeDiff) {
+        if (codeDiff == null || codeDiff.trim().isEmpty()) {
+            System.out.println("No code diff provided to LLM service. Returning empty comments list.");
+            return Collections.emptyList();
+        }
+
+        String prompt = generatePrompt(codeDiff);
+
+        // Build the request body for the OpenAI API.
+        // It includes the model, and messages array (system and user roles).
+        String requestBodyJson = String.format(
+                "{\"model\": \"%s\", \"messages\": [{\"role\": \"system\", \"content\": \"You are an expert Java code reviewer and will provide feedback in JSON format.\" }, {\"role\": \"user\", \"content\": \"%s\"}], \"response_format\": {\"type\": \"json_object\"}}",
+                LLM_MODEL,
+                escapeJson(prompt) // Escape prompt to ensure valid JSON string.
+        );
+
+        RequestBody body = RequestBody.create(
+                requestBodyJson, MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(LLM_API_URL)
+                .header("Authorization", "Bearer " + apiKey)
+                .post(body)
+                .build();
+
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                // Log error details if the API call was not successful.
+                System.err.println("LLM API request failed: " + response.code() + " " + response.message());
+                System.err.println("Response body: " + (response.body() != null ? response.body().string() : "No body"));
+                return Collections.emptyList();
+            }
+
+            if (response.body() == null) {
+                System.err.println("LLM API response body is null.");
+                return Collections.emptyList();
+            }
+
+            String responseBody = response.body().string();
+            // Parse the JSON response from the LLM.
+            // Expected structure: { "choices": [ { "message": { "content": "..." } } ] }
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+            JsonNode choices = rootNode.path("choices");
+
+            if (choices.isArray() && choices.size() > 0) {
+                JsonNode firstChoice = choices.get(0);
+                JsonNode message = firstChoice.path("message");
+                JsonNode content = message.path("content");
+
+                if (!content.isMissing() && content.isTextual()) {
+                    String jsonContent = content.asText();
+                    // The LLM is instructed to return a JSON array directly as a string within 'content'.
+                    // We need to parse this string to a list of ReviewComment objects.
+                    // This might be tricky if the LLM sometimes wraps it, so a robust parser might be needed.
+                    // Assuming the LLM correctly provides a JSON array string directly.
+                    try {
+                        // The LLM is instructed to give a JSON array as the content.
+                        // Example: "content": "[{\"path\": ...}, {\"path\": ...}]"
+                        JsonNode commentsNode = objectMapper.readTree(jsonContent);
+                        if (commentsNode.isArray()) {
+                            return StreamSupport.stream(commentsNode.spliterator(), false)
+                                    .map(node -> {
+                                        try {
+                                            return objectMapper.treeToValue(node, ReviewComment.class);
+                                        } catch (IOException e) {
+                                            System.err.println("Error mapping JSON node to ReviewComment: " + e.getMessage());
+                                            return null;
+                                        }
+                                    })
+                                    .filter(java.util.Objects::nonNull) // Filter out any nulls from mapping errors
+                                    .collect(Collectors.toList());
+                        } else {
+                            System.err.println("LLM content is not a JSON array: " + jsonContent);
+                        }
+                    } catch (IOException e) {
+                        System.err.println("Error parsing LLM content as JSON array: " + e.getMessage());
+                        System.err.println("Raw LLM content: " + jsonContent);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error during LLM API call: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return Collections.emptyList();
+    }
+
+    // Helper to escape JSON strings for inclusion in another JSON string.
+    private String escapeJson(String text) {
+        try {
+            return objectMapper.writeValueAsString(text);
+        } catch (IOException e) {
+            // Should not happen for a simple string.
+            throw new RuntimeException("Error escaping JSON string", e);
+        }
+    }
+}

@@ -1,0 +1,17 @@
+    return call_genai_api(prompt)
+
+def generate_jenkinsfile_documentation(file_path):
+    """
+    Generates documentation for a Jenkinsfile, explaining its stages and purpose.
+    """
+    file_content = read_file_content(file_path)
+    if not file_content:
+        return "<!-- Documentation for Jenkinsfile could not be generated due to file read error. -->"
+
+    prompt = f"""
+    Analyze the following Jenkinsfile and generate a clear, concise summary of its CI/CD pipeline.
+    Explain the purpose of each stage (e.g., Build, Test, Deploy, Generate Docs).
+    Format the output as a Markdown section, including a suitable heading and bullet points for stages.
+
+    File: {os.path.basename(file_path)}
+    Content:

@@ -1,0 +1,115 @@
+// Jenkins Declarative Pipeline for JavaGenAIDevOpsCompanion.
+// GenAI can create complex Jenkinsfiles from scratch based on a description,
+// debug syntax errors, or suggest additional stages like SonarQube analysis,
+// security scans, or deployment steps.
+
+pipeline {
+    // Agent definition: 'any' means the pipeline can run on any available agent.
+    // GenAI can help define specific agents (e.g., 'agent { label 'maven-node' }').
+    agent any
+
+    // Environment variables specific to this pipeline.
+    environment {
+        // Replace with your ECR repository URI for Docker image push.
+        // GenAI can suggest dynamically fetching these or securely storing them in Jenkins credentials.
+        ECR_REPOSITORY = "YOUR_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/javagenai-repo"
+        IMAGE_NAME = "javagenaidevopscompanion"
+    }
+
+    // Stages of the CI/CD pipeline.
+    stages {
+        // Stage 1: Build the Java application.
+        stage('Build') {
+            steps {
+                script {
+                    // Use Maven to clean and package the application.
+                    // GenAI ensures correct Maven commands, handling profiles, etc.
+                    echo 'Building Java application with Maven...'
+                    // Ensure Maven is on the PATH of the Jenkins agent, or use tool() directive.
+                    // For example: `sh 'mvn clean package'`
+                    sh 'mvn clean package -DskipTests' // Skipping tests here, will run in separate stage
+                }
+            }
+        }
+
+        // Stage 2: Run Unit Tests.
+        stage('Test') {
+            steps {
+                script {
+                    echo 'Running JUnit tests...'
+                    sh 'mvn test'
+                    // Archive test results for Jenkins's JUnit plugin.
+                    // GenAI will suggest standard practices for test reporting.
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        // Stage 3: Build Docker Image.
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo 'Building Docker image...'
+                    // Build the Docker image using the Dockerfile in the repository root.
+                    // GenAI can help optimize Docker build commands (e.g., --build-arg).
+                    sh "docker build -t ${IMAGE_NAME}:${env.BUILD_NUMBER} ."
+                    // Tag the image with 'latest' and the build number.
+                    sh "docker tag ${IMAGE_NAME}:${env.BUILD_NUMBER} ${ECR_REPOSITORY}/${IMAGE_NAME}:latest"
+                    sh "docker tag ${IMAGE_NAME}:${env.BUILD_NUMBER} ${ECR_REPOSITORY}/${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                }
+            }
+        }
+
+        // Stage 4: Push Docker Image to ECR.
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    echo 'Authenticating to ECR and pushing Docker image...'
+                    // Authenticate Docker with AWS ECR using credentials.
+                    // GenAI can suggest secure ways to handle AWS credentials in Jenkins (e.g., withCredentials).
+                    withAWS(credentials: 'your-aws-credentials-id', region: 'YOUR_AWS_REGION') { // Replace 'your-aws-credentials-id'
+                        sh "aws ecr get-login-password | docker login --username AWS --password-stdin ${ECR_REPOSITORY}"
+                    }
+                    // Push the tagged Docker images.
+                    sh "docker push ${ECR_REPOSITORY}/${IMAGE_NAME}:latest"
+                    sh "docker push ${ECR_REPOSITORY}/${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    echo 'Docker image pushed to ECR successfully.'
+                }
+            }
+        }
+
+        // Optional Stage: Deploy to Development Environment (manual approval for demo).
+        // GenAI can suggest various deployment strategies (e.g., Blue/Green, Canary).
+        stage('Deploy to Dev') {
+            steps {
+                // Example of a manual approval step.
+                // GenAI can configure email notifications or slack integrations for approvals.
+                input "Proceed with deployment to Development environment?"
+                script {
+                    echo "Deploying to Development environment (simulated)..."
+                    // Add your deployment commands here (e.g., update ECS service, run Ansible, kubectl apply).
+                    // GenAI can generate complex deployment scripts based on target environment.
+                    // sh "kubectl apply -f k8s/dev-deployment.yaml"
+                    echo "Deployment to Dev complete for image ${ECR_REPOSITORY}/${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                }
+            }
+        }
+    }
+
+    // Post-build actions (always executed, regardless of stage success/failure).
+    post {
+        always {
+            // Clean up workspace to save disk space on the agent.
+            // GenAI can remind you about proper workspace cleanup.
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+            // GenAI can suggest sending success notifications (email, Slack).
+        }
+        failure {
+            echo 'Pipeline failed! Check logs for details.'
+            // GenAI can suggest sending failure notifications with build logs.
+        }
+    }
+}

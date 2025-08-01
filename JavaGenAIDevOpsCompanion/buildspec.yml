@@ -1,0 +1,65 @@
+# AWS CodeBuild build specification file for JavaGenAIDevOpsCompanion.
+# GenAI can generate a complete buildspec from a simple request like:
+# "Create an AWS CodeBuild buildspec for a Java Maven project that builds,
+# runs tests, creates a Docker image, and pushes it to ECR."
+
+version: 0.2
+
+# Environment variables (optional, can be passed via CodeBuild console too)
+env:
+  variables:
+    # Replace with your AWS ECR repository URI
+    # GenAI can suggest dynamic ways to fetch this from CloudFormation outputs.
+    ECR_REPOSITORY_URI: "YOUR_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/javagenai-repo"
+    IMAGE_TAG: "latest" # Or use a dynamic tag like $CODEBUILD_RESOLVED_SOURCE_VERSION
+
+phases:
+  install:
+    commands:
+      # Install any necessary dependencies, e.g., Docker for building images.
+      # GenAI can guide on OS-specific package installations.
+      - echo "Installing dependencies..."
+      - # For Amazon Linux 2 (common CodeBuild environment) Docker is usually pre-installed.
+      # If not, you might add: `yum update -y && yum install -y docker`
+      - echo "Docker is available: $(docker --version)"
+  pre_build:
+    commands:
+      # Authenticate Docker to AWS ECR.
+      # GenAI will provide the correct AWS CLI commands for authentication.
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
+      - echo "Pre-build phase complete."
+  build:
+    commands:
+      # Build the Java application using Maven.
+      # GenAI ensures correct Maven commands for building and testing.
+      - echo "Building the Java application with Maven..."
+      - mvn clean install
+      # Build the Docker image.
+      # GenAI can suggest multi-stage build arguments for production images.
+      - echo "Building the Docker image..."
+      - docker build -t $ECR_REPOSITORY_URI:$IMAGE_TAG .
+      - docker tag $ECR_REPOSITORY_URI:$IMAGE_TAG $ECR_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION # Tag with commit ID
+      - echo "Docker image built successfully."
+  post_build:
+    commands:
+      # Push the Docker image to ECR.
+      # GenAI helps with the correct push commands and confirms success.
+      - echo "Pushing the Docker image to ECR..."
+      - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
+      - docker push $ECR_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo "Pushed Docker image to ECR."
+      # Optional: Clean up local Docker images to free up space (good for subsequent builds).
+      # - docker rmi $ECR_REPOSITORY_URI:$IMAGE_TAG $ECR_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+artifacts:
+  # Define artifacts to be uploaded to S3 after the build.
+  # GenAI can help specify which files (e.g., JARs, test reports) should be artifacts.
+  files:
+    - target/JavaGenAIDevOpsCompanion-1.0.0-SNAPSHOT.jar # The built application JAR
+    - buildspec.yml # Include the buildspec itself for reference
+  discard-paths: yes # Do not include the root directory in the artifact structure
+  # For Docker images, artifacts are often managed through ECR, not S3.
+  # But you might include a 'imagedefinitions.json' if using CodePipeline for ECS deployments.
+  # GenAI can generate this JSON for seamless integration with ECS.
+  # - imagedefinitions.json

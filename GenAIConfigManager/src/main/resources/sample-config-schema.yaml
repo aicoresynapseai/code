@@ -1,0 +1,59 @@
+# This file is a conceptual representation of a YAML schema.
+# In a real-world scenario, you would use a formal schema definition language
+# like JSON Schema (and a Java library like Everit JSON Schema for validation).
+# For this demo, validation is done programmatically in ConfigurationService.
+
+# --- YAML Configuration Schema ---
+# Defines the expected structure and types for application.yaml
+
+app-name:
+  type: string
+  required: true
+  description: The name of the application.
+
+environment:
+  type: string
+  required: true
+  enum: [development, staging, production, test]
+  description: The deployment environment.
+
+database:
+  type: object
+  required: true
+  properties:
+    url:
+      type: string
+      required: true
+      pattern: "^jdbc:.*"
+      description: The JDBC connection URL.
+    username:
+      type: string
+      required: true
+      description: Database username.
+    password:
+      type: string
+      required: true
+      description: Database password.
+    driver:
+      type: string
+      required: true
+      description: JDBC driver class name.
+
+logging-levels:
+  type: map
+  required: false
+  description: Map of package/logger names to their logging levels.
+  values_enum: [TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF]
+
+# --- Properties Configuration Schema (Conceptual) ---
+# Defines the expected keys and types for .properties files.
+
+# feature.newUI:
+#   type: boolean
+#   required: true
+#   description: Toggle for the new user interface.
+
+# feature.betaAnalytics:
+#   type: boolean
+#   required: true
+#   description: Toggle for beta analytics features.

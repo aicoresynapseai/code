@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  predictive-analyser:
+    # Build the image from the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Map any volumes if you need persistent data or external configurations
+    # volumes:
+    #   - ./logs:/app/logs # Example for persisting logs
+    # Environment variables (e.g., for API keys in a real scenario)
+    # environment:
+    #   - GENAI_API_KEY=${GENAI_API_KEY} # Load from host .env file
+    container_name: ci-cd-ai-forecaster_app
+    # If it were a web service, you'd map ports:
+    # ports:
+    #   - "8080:8080"
+    # Restart policy to ensure the container restarts if it crashes
+    restart: on-failure

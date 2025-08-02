@@ -1,0 +1,31 @@
+buildId,timestamp,durationSeconds,status,testCount,failedTests,deploymentSuccess,errorMessage
+B001,2023-10-26T10:00:00Z,300,SUCCESS,150,0,TRUE,
+B002,2023-10-26T11:30:00Z,320,SUCCESS,150,0,TRUE,
+B003,2023-10-26T13:00:00Z,450,FAILURE,150,5,FALSE,Test failures in 'UserServiceTest' due to NullPointerException
+B004,2023-10-26T14:45:00Z,310,SUCCESS,145,0,TRUE,
+B005,2023-10-27T09:00:00Z,500,FAILURE,150,0,FALSE,Deployment failed: Unable to connect to database 'prod_db'
+B006,2023-10-27T10:30:00Z,350,SUCCESS,150,0,TRUE,
+B007,2023-10-27T12:00:00Z,600,FAILURE,150,0,FALSE,Out of memory during artifact upload to Nexus
+B008,2023-10-27T14:00:00Z,400,SUCCESS,150,0,TRUE,
+B009,2023-10-28T09:30:00Z,380,FAILURE,150,2,TRUE,Minor test failures in 'OrderServiceTest' (flaky tests)
+B010,2023-10-28T11:00:00Z,390,SUCCESS,148,0,TRUE,
+B011,2023-10-28T13:00:00Z,550,FAILURE,150,0,FALSE,Kubernetes deployment timeout: Pod 'api-gateway' stuck in Pending
+B012,2023-10-28T14:30:00Z,300,SUCCESS,150,0,TRUE,
+B013,2023-10-29T09:00:00Z,480,FAILURE,150,1,TRUE,Slow tests causing build timeout; database connection issues in dev environment
+B014,2023-10-29T10:45:00Z,420,SUCCESS,150,0,TRUE,
+B015,2023-10-29T12:30:00Z,650,FAILURE,150,0,FALSE,Failed to push Docker image to ECR: authentication expired
+B016,2023-10-29T14:00:00Z,330,SUCCESS,150,0,TRUE,
+B017,2023-10-30T09:15:00Z,470,FAILURE,150,0,FALSE,Insufficient disk space on build agent for artifact caching
+B018,2023-10-30T10:50:00Z,315,SUCCESS,150,0,TRUE,
+B019,2023-10-30T12:20:00Z,520,FAILURE,150,3,TRUE,Integration tests failed: external API unresponsive
+B020,2023-10-30T14:10:00Z,340,SUCCESS,150,0,TRUE,
+B021,2023-10-31T09:00:00Z,490,FAILURE,150,0,FALSE,JVM startup errors on target server during deployment
+B022,2023-10-31T10:30:00Z,360,SUCCESS,150,0,TRUE,
+B023,2023-10-31T12:00:00Z,580,FAILURE,150,0,FALSE,Missing environment variable 'DB_URL' during application startup
+B024,2023-10-31T13:45:00Z,325,SUCCESS,150,0,TRUE,
+B025,2023-11-01T09:00:00Z,410,FAILURE,150,0,TRUE,Compilaton error: dependency version conflict for 'spring-boot-starter-web'
+B026,2023-11-01T10:30:00Z,350,SUCCESS,150,0,TRUE,
+B027,2023-11-01T12:00:00Z,460,FAILURE,150,0,FALSE,Firewall block on port 8080 during deployment health check
+B028,2023-11-01T13:30:00Z,370,SUCCESS,150,0,TRUE,
+B029,2023-11-02T09:00:00Z,530,FAILURE,150,0,TRUE,High CPU usage on build agent leading to slow build and eventual timeout
+B030,2023-11-02T10:30:00Z,305,SUCCESS,150,0,TRUE,

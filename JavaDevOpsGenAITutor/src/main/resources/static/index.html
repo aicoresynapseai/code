@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaDevOpsGenAITutor</title>
+    <!-- Link to the custom CSS file for styling -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>JavaDevOpsGenAITutor</h1>
+        <p>Your AI-powered assistant for learning Java DevOps.</p>
+
+        <div class="chat-section">
+            <h2>Interactive Chat</h2>
+            <div id="chat-output" class="output-area"></div>
+            <div class="input-group">
+                <input type="text" id="chat-input" placeholder="Ask me about Java, DevOps, CI/CD..." />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div class="tutor-section">
+            <h2>Code Explanation</h2>
+            <textarea id="code-input" placeholder="Paste your Java code here for explanation..." rows="8"></textarea>
+            <button onclick="explainCode()">Explain Code</button>
+            <div id="code-output" class="output-area"></div>
+        </div>
+
+        <div class="tutor-section">
+            <h2>Onboarding Guide Generator</h2>
+            <input type="text" id="onboard-topic-input" placeholder="e.g., Git for Java Developers, Maven basics" />
+            <button onclick="generateOnboardingGuide()">Generate Guide</button>
+            <div id="onboard-output" class="output-area"></div>
+        </div>
+
+        <div class="faq-section">
+            <h2>FAQ Section</h2>
+            <button onclick="loadFaqs()">Load All FAQs</button>
+            <div id="faq-list-output" class="output-area"></div>
+            <div class="input-group">
+                <input type="text" id="faq-ask-input" placeholder="Ask a specific FAQ question (e.g., What is Jenkins?)" />
+                <button onclick="askFaqQuestion()">Ask FAQ</button>
+            </div>
+            <div id="faq-answer-output" class="output-area"></div>
+        </div>
+    </div>
+
+    <!-- Link to the JavaScript file for dynamic interactions -->
+    <script src="script.js"></script>
+</body>
+</html>

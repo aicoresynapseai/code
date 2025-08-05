@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!-- Defines the parent Spring Boot project, providing dependency management and plugin configurations. -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version> <!-- Using a recent stable Spring Boot version -->
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.genai.devops.tutor</groupId>
+    <artifactId>java-devops-genai-tutor</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>java-devops-genai-tutor</name>
+    <description>GenAI as an interactive tutor for Java DevOps newcomers</description>
+
+    <properties>
+        <java.version>17</java.version> <!-- Specifies Java 17 as the target JVM version -->
+    </properties>
+
+    <dependencies>
+        <!-- Spring Boot Starter Web: Provides all dependencies for building web applications, including Tomcat and Spring MVC. -->
+        <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter Test: Provides dependencies for testing Spring Boot applications (JUnit, Mockito, etc.). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Jackson Databind: Used for JSON processing (e.g., reading/writing JSON files like faqs.json).
+             Spring Boot Starter Web already includes this, but explicitly adding for clarity if needed elsewhere. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin: Packages the project as an executable JAR/WAR. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

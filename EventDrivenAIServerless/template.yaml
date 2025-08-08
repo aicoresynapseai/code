@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  EventDrivenAIServerless
+  Sample serverless application demonstrating event-driven AI with Java, SQS, Comprehend, and DynamoDB.
+
+Globals:
+  Function:
+    Timeout: 30 # Default timeout for Lambda functions in seconds
+    MemorySize: 512 # Default memory for Lambda functions in MB
+    Tracing: Active # Enable AWS X-Ray tracing for better observability
+
+Resources:
+  # Input SQS Queue for incoming text data
+  InputSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: SentimentAnalysisInputQueue
+      VisibilityTimeout: 300 # Set visibility timeout to allow enough time for Lambda processing
+      RedrivePolicy: # Optional: Configure a Dead-Letter Queue for failed messages
+        deadLetterTargetArn: !GetAtt SentimentAnalyzerDLQ.Arn
+        maxReceiveCount: 5 # Number of times a message is retried before moving to DLQ
+
+  # Dead-Letter Queue for Sentiment Analyzer
+  SentimentAnalyzerDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: SentimentAnalyzerDLQ
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  # DynamoDB Table to store sentiment analysis results
+  OutputDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: SentimentAnalysisResults
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S # String type for the partition key
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH # Hash key (partition key)
+      BillingMode: PAY_PER_REQUEST # Use on-demand billing (serverless)
+      TimeToLiveSpecification: # Optional: Automatically delete old items
+        AttributeName: timestamp
+        Enabled: false # Set to true and ensure 'timestamp' is present if you want TTL
+
+  # Serverless Java Lambda Function for Sentiment Analysis
+  SentimentAnalyzerFunction:
+    Type: AWS::Serverless::Function # Defines a Lambda function resource
+    Properties:
+      Handler: com.eventdrivenaiserverless.SentimentAnalyzerLambda::handleRequest # Class and method to handle requests
+      Runtime: java17 # Specify the Java runtime environment
+      CodeUri: SentimentAnalyzerLambda-1.0.jar # Path to the compiled JAR file (created by Maven Shade plugin)
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref OutputDynamoDBTable # Pass DynamoDB table name as environment variable
+      Policies: # IAM Policies for the Lambda function
+        - SQSReadWritePolicy: # Policy to allow reading from SQS and managing DLQ
+            QueueName: !GetAtt InputSQSQueue.QueueName
+            DLQQueueName: !GetAtt SentimentAnalyzerDLQ.QueueName
+        - ComprehendReadPolicy: {} # Policy to allow calling AWS Comprehend services
+        - DynamoDBWritePolicy: # Policy to allow writing to DynamoDB
+            TableName: !Ref OutputDynamoDBTable
+      Events: # Define event sources that trigger this Lambda function
+        SQSEvent:
+          Type: SQS # This function is triggered by an SQS queue
+          Properties:
+            Queue: !GetAtt InputSQSQueue.Arn # ARN of the SQS queue to listen to
+            BatchSize: 10 # Number of messages to process in a single batch
+            Enabled: true # Enable this event source
+
+Outputs:
+  # Output the ARN of the SQS queue for easy access/sending messages
+  InputQueueURL:
+    Description: "SQS Input Queue URL"
+    Value: !Ref InputSQSQueue
+  InputQueueARN:
+    Description: "SQS Input Queue ARN"
+    Value: !GetAtt InputSQSQueue.Arn
+  # Output the name of the DynamoDB table to verify results
+  OutputTableName:
+    Description: "DynamoDB Table Name for Sentiment Analysis Results"
+    Value: !Ref OutputDynamoDBTable

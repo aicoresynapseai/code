@@ -1,0 +1,99 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main # Trigger the workflow on pushes to the 'main' branch
+
+env:
+  # Define environment variables for the workflow
+  DOCKER_IMAGE_NAME_ENV: ${{ secrets.DOCKER_IMAGE_NAME }} # Docker image name from GitHub Secrets
+  K8S_NAMESPACE_ENV: ${{ secrets.K8S_NAMESPACE }} # Kubernetes namespace from GitHub Secrets
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # Run this job on the latest Ubuntu runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Action to check out your repository code
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3 # Recommended for building Docker images
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3 # Action to log in to Docker Hub
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }} # Docker Hub username from secrets
+          password: ${{ secrets.DOCKER_PASSWORD }} # Docker Hub PAT from secrets
+
+      - name: Build and push Docker image
+        id: docker_build # Assign an ID to this step to reference its outputs
+        uses: docker/build-push-action@v5 # Action to build and push Docker images
+        with:
+          context: ./app # Specify the build context (where the Dockerfile is located)
+          push: true     # Push the image to the registry
+          tags: ${{ env.DOCKER_IMAGE_NAME_ENV }}:${{ github.sha }} # Tag the image with Git SHA for uniqueness
+          # Also tag with 'latest' for convenience, if desired (uncomment below)
+          # tags: |
+          #   ${{ env.DOCKER_IMAGE_NAME_ENV }}:${{ github.sha }}
+          #   ${{ env.DOCKER_IMAGE_NAME_ENV }}:latest
+          build-args: |
+            APP_VERSION=${{ github.sha }} # Pass build arguments if needed in Dockerfile
+          # Outputs the full image name and tag, useful for downstream steps
+          outputs: |
+            image_name=${{ env.DOCKER_IMAGE_NAME_ENV }}:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest # Run this job on the latest Ubuntu runner
+    needs: build-and-push # This job depends on the 'build-and-push' job completing successfully
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Check out the repository code
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3 # Action to set up kubectl
+        with:
+          version: 'v1.28.0' # Specify a kubectl version
+
+      - name: Configure Kubeconfig
+        # This step decodes the base64 Kubeconfig from secrets and saves it
+        run: |
+          mkdir -p ~/.kube # Create the .kube directory if it doesn't exist
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config # Decode and write the kubeconfig
+          chmod 600 ~/.kube/config # Set appropriate permissions
+
+      - name: Replace image tag in Kubernetes Deployment YAML
+        id: update_deployment_yaml # Assign an ID to this step
+        # Use sed to replace the placeholder tag with the dynamically built image tag
+        run: |
+          IMAGE_TAG="${{ env.DOCKER_IMAGE_NAME_ENV }}:${{ github.sha }}"
+          echo "Updating deployment.yaml with image: $IMAGE_TAG"
+          sed -i "s|your-docker-username/k8s-node-app:LATEST_IMAGE_TAG|$IMAGE_TAG|g" k8s/deployment.yaml
+          # Verify the change
+          cat k8s/deployment.yaml
+
+      - name: Create Kubernetes Namespace (if not exists)
+        # This step attempts to create the namespace. If it already exists, kubectl will warn but not fail.
+        run: |
+          if [ -n "${{ env.K8S_NAMESPACE_ENV }}" ]; then
+            echo "Creating namespace '${{ env.K8S_NAMESPACE_ENV }}' if it doesn't exist..."
+            kubectl create namespace ${{ env.K8S_NAMESPACE_ENV }} --dry-run=client -o yaml | kubectl apply -f -
+          else
+            echo "K8S_NAMESPACE secret not set. Deploying to default or context's namespace."
+          fi
+
+      - name: Deploy to Kubernetes
+        run: |
+          if [ -n "${{ env.K8S_NAMESPACE_ENV }}" ]; then
+            echo "Applying Kubernetes manifests to namespace: ${{ env.K8S_NAMESPACE_ENV }}"
+            kubectl apply -f k8s/deployment.yaml -n ${{ env.K8S_NAMESPACE_ENV }}
+            kubectl apply -f k8s/service.yaml -n ${{ env.K8S_NAMESPACE_ENV }}
+            echo "Deployment to namespace ${{ env.K8S_NAMESPACE_ENV }} successful."
+          else
+            echo "Applying Kubernetes manifests to default or context's namespace (K8S_NAMESPACE secret not set)."
+            kubectl apply -f k8s/deployment.yaml
+            kubectl apply -f k8s/service.yaml
+            echo "Deployment successful."
+          fi

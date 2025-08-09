@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-node-app-service   # Name of the Kubernetes Service
+  labels:
+    app: k8s-node-app           # Label for the Service
+spec:
+  selector:
+    app: k8s-node-app           # Selects pods with this label to route traffic to
+  type: LoadBalancer            # Exposes the service externally using a cloud provider's load balancer
+                                # For Minikube/Kind, you might use NodePort or ClusterIP and then minikube service.
+  ports:
+  - protocol: TCP               # Protocol for the port
+    port: 80                    # Port on which the service will be exposed
+    targetPort: 3000            # Port on the container to which traffic will be sent
+    nodePort: 30000             # Optional: For NodePort type, specifies the port on the node. Ensure it's in range (30000-32767).
+                                # Remove or comment out nodePort if using LoadBalancer and not testing on Minikube/Kind with node access.

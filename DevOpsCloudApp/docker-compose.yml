@@ -1,0 +1,27 @@
+# Docker Compose configuration for local development and testing.
+# This file defines how our services (in this case, just our app) run together.
+version: '3.8'
+
+services:
+  web:
+    # Build the image using the Dockerfile in the current directory ('.').
+    # This automatically runs `docker build` for our service.
+    build: .
+    # Map port 5000 on the host to port 5000 in the container.
+    # This allows you to access the application via http://localhost:5000.
+    ports:
+      - "5000:5000"
+    # Mount the local 'app' directory into the container's '/app' directory.
+    # This enables live code reloading during development without rebuilding the image.
+    volumes:
+      - ./app:/app
+    # Set environment variables for the container.
+    # FLASK_ENV=development enables debug mode for Flask.
+    # Note: Do not use debug mode in production.
+    environment:
+      FLASK_ENV: development
+    # Command to run (overrides the CMD in Dockerfile for development)
+    # This can be useful for running a development server with auto-reload.
+    command: python main.py
+    # Optional: Restart the container if it exits unexpectedly.
+    restart: always

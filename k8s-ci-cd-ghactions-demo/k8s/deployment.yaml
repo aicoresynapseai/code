@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-node-app-deployment # Name of the Kubernetes Deployment
+  labels:
+    app: k8s-node-app           # Label for the Deployment
+spec:
+  replicas: 3                   # Number of desired replicas (pods)
+  selector:
+    matchLabels:
+      app: k8s-node-app         # Selector to match pods managed by this Deployment
+  template:
+    metadata:
+      labels:
+        app: k8s-node-app       # Labels applied to pods created by this Deployment
+    spec:
+      containers:
+      - name: k8s-node-app      # Name of the container
+        image: your-docker-username/k8s-node-app:LATEST_IMAGE_TAG # Image to use. This tag will be replaced by GitHub Actions.
+        ports:
+        - containerPort: 3000   # Port that the container exposes
+        resources:
+          limits:               # Resource limits for the container
+            memory: "128Mi"
+            cpu: "250m"
+          requests:             # Resource requests for the container
+            memory: "64Mi"
+            cpu: "100m"
+      # Optionally, define imagePullSecrets if you're using a private registry
+      # imagePullSecrets:
+      #   - name: regcred # Replace with the name of your image pull secret

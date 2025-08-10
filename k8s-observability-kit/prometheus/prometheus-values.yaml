@@ -1,0 +1,56 @@
+# This file customizes the Prometheus Helm chart deployment.
+# We're primarily adding custom scrape configurations to discover our microservices.
+
+server:
+  # Define additional scrape configurations for Prometheus.
+  # This section allows adding custom jobs beyond the default Kubernetes service discovery.
+  extraScrapeConfigs: |
+    # Job for scraping Kubernetes services based on annotations.
+    # This is a common pattern when using Prometheus directly with Kubernetes service discovery.
+    - job_name: 'kubernetes-services'
+      # Configure Kubernetes service discovery.
+      kubernetes_sd_configs:
+      - role: service # Discover targets based on Kubernetes Service objects.
+
+      # Relabeling rules transform the discovered metadata into actual scrape targets.
+      relabel_configs:
+      # Rule 1: Filter services that explicitly opt-in for Prometheus scraping.
+      # Only keep services with the annotation `prometheus.io/scrape: "true"`.
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        regex: 'true'
+        action: keep
+
+      # Rule 2: Filter to only include our specific microservices.
+      # This uses the `app` label on the service to target 'microservice-a' or 'microservice-b'.
+      - source_labels: [__meta_kubernetes_service_label_app]
+        regex: '(microservice-a|microservice-b)'
+        action: keep
+
+      # Rule 3: Set the metrics path.
+      # If the annotation `prometheus.io/path` exists, use its value as the metrics path.
+      # Otherwise, the default `/metrics` will be used (handled by Prometheus default behavior).
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        regex: '(.+)'
+        target_label: __metrics_path__
+        replacement: $1
+        action: replace
+
+      # Rule 4: Set the target address.
+      # Extracts the service IP from `__address__` (which is typically `service-name.namespace.svc.cluster.local:port`)
+      # and combines it with the port specified in `prometheus.io/port` annotation.
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        regex: '([^:]+)(?::\d+)?;(\d+)' # Matches IP:Port and captures IP and the annotation port
+        target_label: __address__
+        replacement: $1:$2 # Replaces with IP:AnnotatedPort
+        action: replace
+
+      # Rule 5: Add a custom label 'service_name' using the Kubernetes service name.
+      # This is useful for distinguishing metrics from different services in Grafana.
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+        action: replace
+
+# Optionally, you can enable a service type that allows external access if needed for testing,
+# but for production, consider an Ingress or other secure access methods.
+# service:
+#   type: LoadBalancer # Or NodePort, for testing purposes only

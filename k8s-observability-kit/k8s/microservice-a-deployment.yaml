@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-a
+  labels:
+    app: microservice-a # Label for service discovery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice-a
+  template:
+    metadata:
+      labels:
+        app: microservice-a # Label for pod selection by service
+    spec:
+      containers:
+      - name: microservice-a
+        image: local-registry/sample-microservice:latest # Ensure this image is built and loaded or pulled
+        ports:
+        - containerPort: 8080 # Port where the application serves HTTP traffic and metrics
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        # Optional: Add a readiness probe to ensure the service is ready to serve traffic
+        readinessProbe:
+          httpGet:
+            path: /health # Health check endpoint
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        # Optional: Add a liveness probe to ensure the service is healthy
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microservice-a
+  labels:
+    app: microservice-a
+  annotations:
+    # Prometheus annotations for discovery via Service DNS
+    prometheus.io/scrape: "true" # Indicate that Prometheus should scrape this service
+    prometheus.io/port: "8080"   # The port on which metrics are exposed
+    prometheus.io/path: "/metrics" # The path where metrics are exposed (default is /metrics)
+spec:
+  selector:
+    app: microservice-a
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      name: http

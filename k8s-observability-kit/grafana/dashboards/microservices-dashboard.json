@@ -1,0 +1,384 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-ds" # This UID must match the UID defined in grafana-values.yaml for the Prometheus data source.
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "palette",
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisGridShow": false,
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "axisSoftMax": null,
+              "axisSoftMin": null,
+              "axisWidth": 0,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideTimeOverride": false,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "max": null,
+            "min": 0,
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "frames": [],
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "seriesOverrides": [],
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "builder",
+          "expr": "sum by (service_name) (rate(http_requests_total{job=\"kubernetes-services\"}[1m]))",
+          "instant": false,
+          "legendFormat": "{{service_name}} - Requests/sec", # Legend shows the service name
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP Requests Per Second by Service",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-ds"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "palette",
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisGridShow": false,
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "axisSoftMax": null,
+              "axisSoftMin": null,
+              "axisWidth": 0,
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideTimeOverride": false,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "max": null,
+            "min": 0,
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "frames": [],
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "seriesOverrides": [],
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "builder",
+          "expr": "http_requests_total{job=\"kubernetes-services\", service_name=\"microservice-a\"}",
+          "instant": false,
+          "legendFormat": "Microservice A - Total Requests (Path: {{path}})",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Microservice A - Total HTTP Requests",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-ds"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "palette",
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisGridShow": false,
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "axisSoftMax": null,
+              "axisSoftMin": null,
+              "axisWidth": 0,
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideTimeOverride": false,
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "max": null,
+            "min": 0,
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "frames": [],
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "seriesOverrides": [],
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "builder",
+          "expr": "http_requests_total{job=\"kubernetes-services\", service_name=\"microservice-b\"}",
+          "instant": false,
+          "legendFormat": "Microservice B - Total Requests (Path: {{path}})",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Microservice B - Total HTTP Requests",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graph": "none",
+        "justifySpaceBetween": false,
+        "minVizHeight": 10,
+        "minVizWidth": 10,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercent": false,
+        "text": {
+          "valueSize": 80
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "builder",
+          "expr": "last_request_timestamp_seconds{job=\"kubernetes-services\", service_name=\"microservice-a\"}",
+          "instant": true,
+          "legendFormat": "Last Request A",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Microservice A - Last Request Timestamp",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-ds"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graph": "none",
+        "justifySpaceBetween": false,
+        "minVizHeight": 10,
+        "minVizWidth": 10,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercent": false,
+        "text": {
+          "valueSize": 80
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-ds"
+          },
+          "editorMode": "builder",
+          "expr": "last_request_timestamp_seconds{job=\"kubernetes-services\", service_name=\"microservice-b\"}",
+          "instant": true,
+          "legendFormat": "Last Request B",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Microservice B - Last Request Timestamp",
+      "type": "stat"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "tags": [
+    "microservices",
+    "prometheus",
+    "grafana"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Sample Microservices Overview",
+  "uid": "sample-microservices-dashboard",
+  "variables": {
+    "list": []
+  },
+  "version": 1
+}

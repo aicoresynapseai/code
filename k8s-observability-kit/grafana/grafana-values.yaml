@@ -1,0 +1,78 @@
+# This file customizes the Grafana Helm chart deployment.
+# It configures Prometheus as a data source and imports a pre-defined dashboard.
+
+# Set the admin user and password for Grafana.
+# IMPORTANT: For production, use Kubernetes secrets for sensitive information.
+admin:
+  user: admin
+  password: prom-grafana-password # Change this to a strong, secret password for production!
+
+# Configure persistence for Grafana data (dashboards, users, data sources).
+# Recommended for production deployments to avoid losing data on pod restarts.
+persistence:
+  enabled: true
+  type: pvc
+  size: 5Gi
+  accessModes:
+    - ReadWriteOnce
+
+# Configure Grafana data sources.
+# This section adds Prometheus as a data source, making it available for dashboards.
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus # Name of the data source to be displayed in Grafana UI
+        type: prometheus
+        uid: prometheus-ds # Unique identifier for this data source. Used in dashboard JSON.
+        url: http://prometheus-server.monitoring.svc.cluster.local # Internal cluster URL for Prometheus service
+        access: proxy
+        isDefault: true # Set this as the default data source
+        version: 1
+        editable: true
+
+# Configure Grafana dashboards to be provisioned automatically.
+# This section mounts the 'microservices-dashboard.json' as a dashboard.
+dashboards:
+  default:
+    # Use the `sidecar` method to discover and load dashboards from a configmap.
+    # This requires the dashboard JSON to be available in a ConfigMap, which the Helm chart handles.
+    # The `dashboards.json` sub-directory will be created by the chart and filled with the content
+    # from the `microservices-dashboard.json` file.
+    enabled: true
+    # The provider watches a folder for dashboard files.
+    # We'll map a ConfigMap to this folder.
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: '' # Dashboards will be in the root folder
+        type: file
+        disableDelete: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default # Path where Grafana expects dashboard files
+
+# Enable persistence for dashboards and configure where they are loaded from.
+# This ensures that our custom dashboard is loaded.
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDelete: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+# Create a ConfigMap to hold our dashboard JSON.
+# The `grafana/dashboards/microservices-dashboard.json` file will be injected here.
+# The Grafana chart automatically mounts this ConfigMap to `/var/lib/grafana/dashboards/default`.
+extraConfigmapMounts:
+  - name: grafana-dashboards
+    mountPath: /var/lib/grafana/dashboards/default
+    subPath: ""
+    configMap: grafana-dashboards # Name of the ConfigMap that will hold the dashboard JSON
+    readOnly: true

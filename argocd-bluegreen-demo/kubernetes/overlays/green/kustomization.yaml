@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+  - ../../base # Reference the common base Kubernetes manifests.
+
+# This suffix will be added to the names of the Deployment and Service resources
+# generated from the base, distinguishing them as part of the 'green' environment.
+# E.g., 'my-app' becomes 'my-app-green', 'my-app-service' becomes 'my-app-green-service'.
+nameSuffix: "-green"
+
+# Patches to apply to the base resources.
+# These patches will override specific fields in the base definitions for the 'green' environment.
+patchesStrategicMerge:
+  - deployment-patch.yaml    # Modifies the base deployment for 'green' specifics.
+  - service-patch.yaml       # Modifies the base service for 'green' specifics.
+  - router-service-patch.yaml # Crucial: Patches the router service to point to 'green' pods.

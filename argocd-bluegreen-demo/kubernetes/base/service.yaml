@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service # Base name for the service. Kustomize overlays will add a suffix (e.g., my-app-blue-service, my-app-green-service).
+  labels:
+    app: my-app # Base application label
+spec:
+  selector:
+    app: my-app
+    version: placeholder # This selector is a placeholder and will be replaced by the overlays.
+                         # It will target pods specific to the blue or green environment.
+  ports:
+  - protocol: TCP
+    port: 80 # Service port
+    targetPort: 80 # Port on the target pods

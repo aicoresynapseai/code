@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+  - ../../base # Reference the common base Kubernetes manifests.
+
+# This suffix will be added to the names of the Deployment and Service resources
+# generated from the base, distinguishing them as part of the 'blue' environment.
+# E.g., 'my-app' becomes 'my-app-blue', 'my-app-service' becomes 'my-app-blue-service'.
+nameSuffix: "-blue"
+
+# Patches to apply to the base resources.
+# These patches will override specific fields in the base definitions for the 'blue' environment.
+patchesStrategicMerge:
+  - deployment-patch.yaml    # Modifies the base deployment for 'blue' specifics.
+  - service-patch.yaml       # Modifies the base service for 'blue' specifics.
+  - router-service-patch.yaml # Crucial: Patches the router service to point to 'blue' pods.

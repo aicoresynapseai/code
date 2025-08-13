@@ -1,0 +1,52 @@
+# This Cloud Build configuration orchestrates Terraform to provision GCP infrastructure.
+# It initializes Terraform, plans the changes, and then applies them.
+
+steps:
+  # Step 1: Initialize Terraform
+  # This step runs 'terraform init' to prepare the working directory.
+  # It configures the GCS backend for state management using the _TF_STATE_BUCKET substitution variable.
+  # The -reconfigure flag ensures that if the backend config changes (e.g., bucket name),
+  # it will be re-initialized.
+  - name: 'gcr.io/cloud-builders/terraform'
+    id: 'Terraform Init'
+    args:
+      - 'init'
+      - '-backend-config=bucket=${_TF_STATE_BUCKET}'
+      - '-reconfigure' # Use -reconfigure to ensure state backend is correctly picked up
+    dir: 'terraform' # Execute commands within the 'terraform' subdirectory
+    env:
+      # Pass the GCP Project ID to Terraform as an environment variable.
+      # Cloud Build automatically provides the current project ID via ${PROJECT_ID} built-in variable.
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID}'
+
+  # Step 2: Plan Terraform Changes
+  # This step runs 'terraform plan' to create an execution plan.
+  # The plan is saved to a file named 'tfplan' for subsequent 'apply' step.
+  - name: 'gcr.io/cloud-builders/terraform'
+    id: 'Terraform Plan'
+    args:
+      - 'plan'
+      - '-out=tfplan' # Save the plan to 'tfplan' file
+    dir: 'terraform'
+    env:
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID}'
+
+  # Step 3: Apply Terraform Changes
+  # This step runs 'terraform apply' using the previously generated plan.
+  # The -auto-approve flag bypasses the interactive approval prompt, which is necessary for automated pipelines.
+  - name: 'gcr.io/cloud-builders/terraform'
+    id: 'Terraform Apply'
+    args:
+      - 'apply'
+      - '-auto-approve'
+      - 'tfplan' # Apply the saved plan
+    dir: 'terraform'
+    env:
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID}'
+
+# Substitutions for Cloud Build:
+# These variables must be provided when triggering the build using `gcloud builds submit`.
+# _TF_STATE_BUCKET: Custom variable for the GCS bucket name storing Terraform state.
+# The PROJECT_ID variable is automatically provided by Cloud Build for the current project.
+substitutions:
+  _TF_STATE_BUCKET: '' # This needs to be set when triggering the build, e.g., --substitutions=_TF_STATE_BUCKET=my-tf-state-bucket

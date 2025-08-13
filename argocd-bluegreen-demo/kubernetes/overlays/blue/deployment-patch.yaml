@@ -1,0 +1,25 @@
+# This patch modifies the base 'my-app' Deployment for the 'blue' environment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app # Targets the base deployment named 'my-app'. Kustomize's nameSuffix will then make it 'my-app-blue'.
+  labels:
+    app: my-app # Ensures this label matches the base for patching.
+spec:
+  replicas: 2 # Set the desired number of replicas for the blue environment.
+  selector:
+    matchLabels:
+      app: my-app
+      version: blue # Crucial: Labels the pods managed by this deployment with 'version: blue'.
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: blue # Crucial: Labels the pod template with 'version: blue'.
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginxdemos/hello:plain-text # Specifies the image for the blue version (e.g., v1.0.0).
+        env:
+        - name: MESSAGE
+          value: "Hello from Blue Environment! (v1.0.0)" # Sets the environment-specific message.

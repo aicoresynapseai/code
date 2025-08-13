@@ -1,0 +1,9 @@
+# This patch modifies the base 'my-app-service' for the 'blue' environment.
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service # Targets the base service named 'my-app-service'. Kustomize's nameSuffix will then make it 'my-app-blue-service'.
+spec:
+  selector:
+    app: my-app
+    version: blue # Crucial: This service selects pods labeled with 'version: blue'.

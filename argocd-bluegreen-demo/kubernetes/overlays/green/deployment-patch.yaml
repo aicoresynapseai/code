@@ -1,0 +1,25 @@
+# This patch modifies the base 'my-app' Deployment for the 'green' environment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app # Targets the base deployment named 'my-app'. Kustomize's nameSuffix will then make it 'my-app-green'.
+  labels:
+    app: my-app # Ensures this label matches the base for patching.
+spec:
+  replicas: 2 # Set the desired number of replicas for the green environment.
+  selector:
+    matchLabels:
+      app: my-app
+      version: green # Crucial: Labels the pods managed by this deployment with 'version: green'.
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: green # Crucial: Labels the pod template with 'version: green'.
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginxdemos/hello:blue-green # Specifies the image for the green version (e.g., v2.0.0).
+        env:
+        - name: MESSAGE
+          value: "Hello from Green Environment! (v2.0.0)" # Sets the environment-specific message.

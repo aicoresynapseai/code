@@ -1,0 +1,9 @@
+# This patch modifies the stable 'my-app-router-service' to direct traffic to the 'blue' environment.
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-router-service # Targets the router service directly (no nameSuffix for this one).
+spec:
+  selector:
+    app: my-app
+    version: blue # Crucial: Changes the router service's selector to point to pods with 'version: blue'.

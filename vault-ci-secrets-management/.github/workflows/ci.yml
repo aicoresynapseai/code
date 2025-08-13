@@ -1,0 +1,62 @@
+name: Secure CI/CD with Vault
+
+on:
+  push:
+    branches:
+      - main # Trigger the workflow on pushes to the main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Action to checkout your repository code
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9' # Specify the Python version
+
+      - name: Login to Vault and Retrieve Secrets
+        uses: hashicorp/vault-action@v3 # Use the official HashiCorp Vault Action
+        id: vault-login # Assign an ID to this step to reference its outputs
+        with:
+          # In a real-world scenario, VAULT_ADDR should point to your publicly accessible Vault server.
+          # For this example, we assume `http://<your-vault-public-ip-or-dns>:8200`
+          # If running against the local docker-compose Vault, this workflow won't directly connect to it
+          # unless you expose it publicly or use a self-hosted runner.
+          # The purpose here is to demonstrate the *syntax* and *logic* of the integration.
+          # Replace with your actual Vault address
+          url: "http://example-vault.your-domain.com:8200" # Placeholder: Replace with your actual Vault server URL
+
+          # OIDC authentication method for GitHub Actions
+          method: oidc
+          role: github-actions # The Vault OIDC role defined in vault_setup.sh
+          
+          # This audience must match the 'bound_audiences' configured in your Vault OIDC role
+          jwt_audience: my_vault_audience 
+
+          # Define the secrets to retrieve from Vault's KV engine
+          # Format: <path-to-secret> <key-in-secret>
+          # These will be exported as environment variables with capitalized key names (e.g., DB_USERNAME)
+          secrets: |
+            kv-v2/data/my-app/db-creds username
+            kv-v2/data/my-app/db-creds password
+          
+          # Ensure secrets are exported as environment variables
+          export_secrets: true
+
+      - name: Run Application
+        run: |
+          # The secrets retrieved by vault-action are now available as environment variables
+          # (e.g., DB_USERNAME, DB_PASSWORD)
+          echo "Running application with secrets injected from Vault..."
+          python app/main.py
+        env:
+          # Explicitly pass the environment variables to the Python script.
+          # The vault-action exports them automatically, but listing them here
+          # makes it explicit and can also be used for specific environment settings.
+          DB_USERNAME: ${{ env.DB_USERNAME }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          # Note: GitHub Actions will automatically mask sensitive environment variables in logs.

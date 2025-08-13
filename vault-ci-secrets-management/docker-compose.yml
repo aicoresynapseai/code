@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  vault:
+    image: hashicorp/vault:1.15
+    ports:
+      - "8200:8200" # Expose Vault HTTP API
+    environment:
+      # VAULT_DEV_ROOT_TOKEN_ID: "myroottoken" # Not using dev token for initial setup to demonstrate init/unseal
+      VAULT_DEV_MODE: "true" # Enables dev mode for simpler local setup, auto-unsealed and initial token provided
+      VAULT_ADDR: "http://0.0.0.0:8200" # Listen on all interfaces
+    cap_add:
+      - IPC_LOCK # Required by Vault to prevent memory from being swapped to disk
+    volumes:
+      - vault_data:/vault/file # Persist Vault data
+    command: "server -dev -dev-listen-address=0.0.0.0:8200" # Command to run Vault in dev mode
+
+volumes:
+  vault_data: # Define the named volume for data persistence

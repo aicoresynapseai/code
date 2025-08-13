@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml      # Base Deployment definition
+  - service.yaml         # Base Service definition
+  - router-service.yaml  # The stable router Service
+  - ingress.yaml         # Ingress for external access

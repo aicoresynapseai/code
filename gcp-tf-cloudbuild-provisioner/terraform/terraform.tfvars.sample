@@ -1,0 +1,26 @@
+# This file provides example values for your Terraform variables.
+# For actual deployment, copy this to 'terraform.tfvars' and customize.
+# DO NOT commit sensitive data directly into 'terraform.tfvars' in production environments.
+
+# project_id = "your-gcp-project-id"
+# The project_id variable is automatically passed to Terraform by Cloud Build via an environment variable.
+# You typically don't need to uncomment or set it here unless running Terraform locally outside of Cloud Build.
+
+region = "us-central1"
+zone   = "us-central1-c"
+
+# GKE Cluster Configuration
+gke_cluster_name      = "my-cloudbuild-gke-cluster-demo" # Unique name for your GKE cluster
+gke_node_count        = 1                                # Number of nodes in the default node pool
+gke_node_machine_type = "e2-medium"                      # Machine type for GKE nodes
+gke_node_disk_size_gb = 50                               # Disk size in GB for GKE nodes
+
+# Cloud SQL Configuration
+sql_instance_name    = "my-cloudbuild-sql-instance-demo" # Unique name for your Cloud SQL instance
+sql_database_version = "POSTGRES_14"                     # Database version (e.g., POSTGRES_14, MYSQL_8_0)
+sql_instance_tier    = "db-f1-micro"                     # Machine type for Cloud SQL instance
+sql_disk_size_gb     = 20                                # Disk size in GB for Cloud SQL instance
+sql_disk_type        = "PD_SSD"                          # Disk type for Cloud SQL instance (PD_SSD or PD_HDD)
+sql_database_name    = "app_db"                          # Name of the database to create
+sql_username         = "app_user"                        # Username for the database user
+sql_password         = "MyStrongPassw0rd!"               # IMPORTANT: Change this password and handle securely in production (e.g., using Secret Manager)

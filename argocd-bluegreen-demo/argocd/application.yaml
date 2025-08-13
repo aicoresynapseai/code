@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bluegreen-app
+  namespace: argocd # ArgoCD is typically installed in its own namespace
+spec:
+  project: default # Use the default project
+  source:
+    repoURL: https://github.com/<YOUR_GITHUB_USER>/argocd-bluegreen-demo.git # <<< CHANGE THIS to your Git repository URL
+    targetRevision: HEAD # Track the latest commit on the main branch (e.g., 'main' or 'master')
+    path: kubernetes/overlays/blue # <<< INITIAL DEPLOYMENT PATH: Point to the blue environment Kustomize overlay.
+                                  #     Change this to 'kubernetes/overlays/green' in Git to switch traffic.
+
+  destination:
+    server: https://kubernetes.default.svc # Deploy to the same cluster ArgoCD is running in
+    namespace: bluegreen-demo # Target namespace for the application resources. Create this namespace first!
+
+  syncPolicy:
+    automated:
+      prune: true # Allow ArgoCD to delete resources that are no longer in Git (e.g., old blue/green deployments)
+      selfHeal: true # Automatically sync if there's drift from Git
+    syncOptions:
+      - CreateNamespace=true # ArgoCD will create the target namespace if it doesn't exist
+      - ApplyOutOfSyncOnly=true # Only apply resources that are out of sync, preventing unnecessary updates

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app # Base name for the deployment. Kustomize overlays will add a suffix (e.g., my-app-blue, my-app-green).
+  labels:
+    app: my-app # Base application label
+spec:
+  replicas: 1 # Default replicas. This will be overridden by overlays.
+  selector:
+    matchLabels:
+      app: my-app
+      version: placeholder # This label is a placeholder and will be replaced by the overlays (e.g., 'blue' or 'green').
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: placeholder # This label is a placeholder and will be replaced by the overlays.
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginxdemos/hello:plain-text # Default image. Overlays will specify the actual image for blue/green.
+        ports:
+        - containerPort: 80 # Application listens on port 80
+        env:
+        - name: MESSAGE
+          value: "Hello from base application!" # Default message. Overlays will provide specific messages.

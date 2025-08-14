@@ -1,0 +1,18 @@
+# Kubernetes Service for the podinfo application.
+# This service points to the 'app: podinfo' label, abstracting the underlying deployments.
+apiVersion: v1
+kind: Service
+metadata:
+  name: podinfo
+  namespace: canary-demo
+  labels:
+    app: podinfo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9898
+      targetPort: 9898
+      protocol: TCP
+      name: http
+  selector:
+    app: podinfo # Selects pods with this label, regardless of version

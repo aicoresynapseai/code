@@ -1,0 +1,31 @@
+# New version of the application (v2).
+# Applying this manifest will trigger the canary deployment orchestrated by Flagger.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo
+  namespace: canary-demo
+  labels:
+    app: podinfo
+spec:
+  replicas: 3 # Number of desired replicas for the new version
+  selector:
+    matchLabels:
+      app: podinfo
+  template:
+    metadata:
+      labels:
+        app: podinfo
+        version: v2 # Updated version label
+    spec:
+      containers:
+        - name: podinfo
+          image: ghcr.io/stefanprodan/podinfo:6.0.1 # New image for version 2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9898
+          env:
+            - name: PODINFO_UI_COLOR
+              value: green # Distinguish v2 UI color
+            - name: PODINFO_VERSION
+              value: "v2" # Explicit version in env for testing

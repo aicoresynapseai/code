@@ -1,0 +1,64 @@
+# Flagger Canary resource definition for the podinfo application.
+# This YAML describes the canary release strategy.
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: podinfo
+  namespace: canary-demo
+spec:
+  provider: istio # Specify Istio as the service mesh provider
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo # The name of the Kubernetes Deployment that Flagger will manage
+  service:
+    name: podinfo # The name of the Kubernetes Service associated with the Deployment
+    port: 9898 # The service port
+    targetPort: 9898 # The target port on the pods
+    gateways:
+      - podinfo-gateway # Associate with the Istio Gateway
+    hosts:
+      - podinfo.example.com # Associate with the VirtualService host
+  analysis:
+    interval: 10s # Interval at which Flagger runs analysis checks
+    threshold: 5 # Number of failed metric checks before a rollback is triggered
+    maxRetries: 10 # Maximum number of retries for an analysis step
+    stepWeight: 10 # Percentage of traffic to shift in each step (e.g., 10% per step)
+    stepWeightPromotion: 10 # Percentage of traffic to shift for promotion steps (can be different)
+    metrics:
+      # Prometheus query for success rate (HTTP 2xx/3xx requests)
+      - name: request-success-rate
+        interval: 1m
+        thresholdRange:
+          min: 99 # Minimum acceptable success rate (99%)
+        query: |
+          sum(irate(istio_requests_total{
+            reporter="destination",
+            destination_workload_namespace="canary-demo",
+            destination_workload="podinfo",
+            response_code!~"5xx"
+          }[1m])) / sum(irate(istio_requests_total{
+            reporter="destination",
+            destination_workload_namespace="canary-demo",
+            destination_workload="podinfo"
+          }[1m])) * 100
+      # Prometheus query for HTTP request duration (latency)
+      - name: request-duration
+        interval: 1m
+        thresholdRange:
+          max: 500 # Maximum acceptable request duration (500ms)
+        query: |
+          histogram_quantile(0.99, sum(irate(istio_request_duration_milliseconds_bucket{
+            reporter="destination",
+            destination_workload_namespace="canary-demo",
+            destination_workload="podinfo"
+          }[1m])) by (le))
+    webhooks:
+      # Optional: Pre-rollout hook for integration tests
+      - name: "load-test"
+        type: pre-rollout
+        url: "http://flagger-loadtester.canary-demo:80/loadtest" # Example webhook for load testing, assuming a load tester is deployed
+        timeout: 5s
+        metadata:
+          type: "cmd"
+          cmd: "helm upgrade --install flagger-loadtester flagger/flagger-loadtester --namespace=canary-demo --set url=http://podinfo.canary-demo:9898 --set duration=60s --set calls=500 --set labels='app=podinfo'"

@@ -1,0 +1,17 @@
+# Istio Gateway to expose the podinfo service outside the cluster.
+# This allows external traffic to reach our application through the Istio ingress gateway.
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: podinfo-gateway
+  namespace: canary-demo
+spec:
+  selector:
+    istio: ingressgateway # Use the default Istio ingress gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "podinfo.example.com" # The hostname used to access the application

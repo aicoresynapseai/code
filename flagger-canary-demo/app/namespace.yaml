@@ -1,0 +1,8 @@
+# Defines the Kubernetes namespace for our application.
+# It's crucial to label this namespace for Istio sidecar injection.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: canary-demo
+  labels:
+    istio-injection: enabled # Enable Istio sidecar injection for this namespace

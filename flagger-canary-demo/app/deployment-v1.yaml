@@ -1,0 +1,31 @@
+# Initial stable version of the application (v1).
+# Flagger will manage this deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo
+  namespace: canary-demo
+  labels:
+    app: podinfo
+spec:
+  replicas: 3 # Number of stable replicas
+  selector:
+    matchLabels:
+      app: podinfo
+  template:
+    metadata:
+      labels:
+        app: podinfo
+        version: v1 # Version label for easier identification
+    spec:
+      containers:
+        - name: podinfo
+          image: ghcr.io/stefanprodan/podinfo:6.0.0 # Image for version 1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9898
+          env:
+            - name: PODINFO_UI_COLOR
+              value: blue # Distinguish v1 UI color
+            - name: PODINFO_VERSION
+              value: "v1" # Explicit version in env for testing

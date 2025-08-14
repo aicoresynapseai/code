@@ -1,0 +1,20 @@
+# Istio VirtualService to route traffic for the podinfo application.
+# Initially, all traffic will go to the 'podinfo' Kubernetes service,
+# which Flagger will manage by dynamically updating its routes.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: podinfo
+  namespace: canary-demo
+spec:
+  hosts:
+    - "podinfo.example.com" # Must match the host in the Gateway
+  gateways:
+    - podinfo-gateway # Associate with our Gateway
+  http:
+    - route:
+        - destination:
+            host: podinfo # This points to the Kubernetes Service, Flagger will redirect traffic to canary/primary pods.
+            port:
+              number: 9898
+          weight: 100 # Initially, 100% of traffic goes to the stable service

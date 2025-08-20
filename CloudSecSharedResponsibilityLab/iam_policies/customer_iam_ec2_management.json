@@ -1,0 +1,47 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowEC2InstanceManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:RunInstances",         // Allow creating new instances
+        "ec2:TerminateInstances",   // Allow stopping/terminating instances
+        "ec2:StartInstances",       // Allow starting instances
+        "ec2:StopInstances",        // Allow stopping instances
+        "ec2:DescribeInstances",    // Allow viewing instance details
+        "ec2:RebootInstances"       // Allow rebooting instances
+      ],
+      "Resource": "*"               // Apply to all EC2 instances (can be restricted by tags or specific ARNs)
+    },
+    {
+      "Sid": "AllowSecurityGroupManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AuthorizeSecurityGroupIngress", // Allow adding inbound rules
+        "ec2:RevokeSecurityGroupIngress",    // Allow removing inbound rules
+        "ec2:AuthorizeSecurityGroupEgress",  // Allow adding outbound rules
+        "ec2:RevokeSecurityGroupEgress",     // Allow removing outbound rules
+        "ec2:DescribeSecurityGroups",        // Allow viewing security group details
+        "ec2:CreateSecurityGroup",           // Allow creating new security groups
+        "ec2:DeleteSecurityGroup"            // Allow deleting security groups
+      ],
+      "Resource": "*"               // Apply to all security groups (can be restricted)
+    },
+    {
+      "Sid": "AllowKeypairAndVolumeManagement",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateKeyPair",
+        "ec2:DeleteKeyPair",
+        "ec2:DescribeKeyPairs",
+        "ec2:CreateVolume",
+        "ec2:DeleteVolume",
+        "ec2:AttachVolume",
+        "ec2:DetachVolume",
+        "ec2:DescribeVolumes"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadAccess",
+      "Effect": "Allow",
+      "Principal": "*",           // Critical misconfiguration: Allows ANYONE (public)
+      "Action": [
+        "s3:GetObject"            // To read objects
+      ],
+      "Resource": "arn:aws:s3:::my-misconfigured-public-bucket/*" // In this specific bucket
+    },
+    {
+      "Sid": "AnotherOverlyPermissiveAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"                    // Grants all S3 actions
+      ],
+      "Resource": "*"             // On ALL S3 resources (all buckets and their objects)
+    }
+  ]
+}

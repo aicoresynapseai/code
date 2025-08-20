@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadWriteToSpecificBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-secure-customer-bucket-12345",         // Specific bucket ARN
+        "arn:aws:s3:::my-secure-customer-bucket-12345/*"         // All objects within the bucket
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "o-xxxxxxxxxx" // Best practice: Restrict access to specific AWS Organizations ID
+        }
+      }
+    },
+    {
+      "Sid": "AllowListingAllBuckets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "*" // Required to list all buckets that the user has access to, but without allowing data access.
+    }
+  ]
+}

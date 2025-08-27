@@ -1,0 +1,16 @@
+# This RoleBinding binds the 'app-pod-reader-sa' ServiceAccount to the 'pod-reader-role'.
+# This effectively grants the 'app-pod-reader-sa' the permissions defined in 'pod-reader-role'
+# within the 'secure-app-ns' namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods-rolebinding # Name of the RoleBinding
+  namespace: secure-app-ns # Namespace where the RoleBinding is defined
+subjects:
+- kind: ServiceAccount # The type of subject being bound
+  name: app-pod-reader-sa # The name of the ServiceAccount
+  namespace: secure-app-ns # The namespace of the ServiceAccount
+roleRef:
+  kind: Role # The type of role being referenced
+  name: pod-reader-role # The name of the Role being referenced
+  apiGroup: rbac.authorization.k8s.io # The API group of the Role

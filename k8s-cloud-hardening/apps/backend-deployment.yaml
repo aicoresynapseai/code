@@ -1,0 +1,43 @@
+# A simple backend application deployment.
+# It uses the `app-pod-reader-sa` to demonstrate RBAC.
+# This pod will have permissions to read other pods in its namespace.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app
+  labels:
+    app: backend
+    tier: backend
+  namespace: secure-app-ns # Deploy in the secured namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: backend
+    spec:
+      serviceAccountName: app-pod-reader-sa # Assign the ServiceAccount with pod-reader permissions
+      containers:
+      - name: backend
+        image: nginxdemos/hello:plain-text # A simple plain-text server
+        ports:
+        - containerPort: 80 # Default HTTP port
+        command: ["/bin/sh", "-c"]
+        args: ["echo 'Backend service running...' && sleep infinity"] # Keep the container running
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: secure-app-ns
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

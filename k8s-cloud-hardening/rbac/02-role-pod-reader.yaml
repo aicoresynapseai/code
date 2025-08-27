@@ -1,0 +1,11 @@
+# This Role defines a set of permissions within a specific namespace.
+# It grants read-only access (get, list, watch) to 'pods' resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader-role # Name of the Role
+  namespace: secure-app-ns # Namespace where the Role is defined
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"] # The resource type this Role applies to
+  verbs: ["get", "list", "watch"] # The actions allowed on the resource

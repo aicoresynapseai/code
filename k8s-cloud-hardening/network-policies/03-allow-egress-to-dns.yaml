@@ -1,0 +1,37 @@
+# This NetworkPolicy allows all pods in the 'secure-app-ns' namespace to perform DNS lookups.
+# DNS resolution is typically required for applications to function correctly, e.g., resolving
+# external service names or internal Kubernetes service names.
+# Without this, applications might fail to start or resolve dependencies.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-dns
+  namespace: secure-app-ns
+spec:
+  podSelector: {} # Apply to all pods in the namespace
+  policyTypes:
+    - Egress # This is an egress policy
+  egress:
+    # Rule 1: Allow egress to kube-dns service within the cluster
+    - to:
+        - namespaceSelector: {} # Selects all namespaces
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns # Selects the kube-dns pods (common label for default DNS)
+      ports:
+        - protocol: UDP
+          port: 53 # DNS UDP port
+        - protocol: TCP
+          port: 53 # DNS TCP port (for zone transfers, large responses)
+    # Rule 2 (Optional, for general external access to well-known DNS servers):
+    # - to:
+    #     - ipBlock:
+    #         cidr: 0.0.0.0/0 # This would allow egress to all IPs
+    #   ports:
+    #     - protocol: UDP
+    #       port: 53
+    #     - protocol: TCP
+    #       port: 53
+    # Note: The 'to' field takes a list. If you combine ipBlock with podSelector/namespaceSelector,
+    # it means "allow egress to any of these targets".
+    # For a stricter DNS policy, rely on the kube-dns specific selector.

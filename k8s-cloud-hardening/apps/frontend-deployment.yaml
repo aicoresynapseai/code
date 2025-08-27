@@ -1,0 +1,40 @@
+# A simple frontend application deployment.
+# This pod will attempt to connect to the backend.
+# It does NOT use the `app-pod-reader-sa` and thus has no special RBAC permissions.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-app
+  labels:
+    app: frontend
+    tier: frontend
+  namespace: secure-app-ns # Deploy in the secured namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: curlimages/curl:7.83.1 # A simple curl image to test connectivity
+        command: ["/bin/sh", "-c"]
+        args: ["echo 'Frontend service running, attempting to reach backend...' && sleep infinity"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: secure-app-ns
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

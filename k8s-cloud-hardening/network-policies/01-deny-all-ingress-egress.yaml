@@ -1,0 +1,16 @@
+# This NetworkPolicy implements a "default-deny" posture for the 'secure-app-ns' namespace.
+# It selects all pods in the namespace and denies all incoming (ingress) and outgoing (egress) traffic.
+# This is a critical first step for enforcing network segmentation, ensuring only explicitly
+# allowed traffic can flow.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: secure-app-ns # Apply to the secured application namespace
+spec:
+  podSelector: {} # An empty podSelector selects all pods in the namespace
+  policyTypes:
+    - Ingress # Apply policy to incoming traffic
+    - Egress # Apply policy to outgoing traffic
+  ingress: [] # No ingress rules means all ingress is denied
+  egress: [] # No egress rules means all egress is denied
